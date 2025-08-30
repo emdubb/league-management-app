@@ -26,7 +26,7 @@ export default function NavBar() {
           <MenuIcon />
         </IconButton>
         <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-          League Management
+          Sacramento Roller Derby
         </Typography>
         <Menu
           anchorEl={anchorEl}
@@ -34,7 +34,7 @@ export default function NavBar() {
           onClose={handleClose}
         >
           <MenuItem onClick={handleClose} component={Link} to="/">Home</MenuItem>
-          <MenuItem onClick={handleClose} component={Link} to="/teams">Teams</MenuItem>
+          <MenuItem onClick={handleClose} component={Link} to="/volunteer">Volunteer</MenuItem>
           <MenuItem onClick={handleClose} component={Link} to="/schedule">Schedule</MenuItem>
           <MenuItem onClick={handleClose} component={Link} to="/profile">Profile</MenuItem>
         </Menu>

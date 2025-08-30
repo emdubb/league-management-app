@@ -3,7 +3,7 @@ import React from 'react';
 import NavBar from './components/NavBar';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Home from './pages/Home';
-import Teams from './pages/Teams';
+import Volunteer from './pages/Volunteer';
 import Schedule from './pages/Schedule';
 import Profile from './pages/Profile';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
@@ -36,7 +36,7 @@ export default function App() {
         <div style={{ marginTop: 80 }}>
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/teams" element={<Teams />} />
+            <Route path="/volunteer" element={<Volunteer />} />
             <Route path="/schedule" element={<Schedule />} />
             <Route path="/profile" element={<Profile />} />
           </Routes>
