@@ -7,6 +7,7 @@ import Volunteer from './pages/Volunteer';
 import Schedule from './pages/Schedule';
 import Profile from './pages/Profile';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { SignedUpGamesProvider } from './SignedUpGamesContext';
 
 const theme = createTheme({
   palette: {
@@ -31,17 +32,19 @@ const theme = createTheme({
 export default function App() {
   return (
     <ThemeProvider theme={theme}>
-      <Router>
-        <NavBar />
-        <div style={{ marginTop: 80 }}>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/volunteer" element={<Volunteer />} />
-            <Route path="/schedule" element={<Schedule />} />
-            <Route path="/profile" element={<Profile />} />
-          </Routes>
-        </div>
-      </Router>
+      <SignedUpGamesProvider>
+        <Router>
+          <NavBar />
+          <div style={{ marginTop: 80 }}>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/volunteer" element={<Volunteer />} />
+              <Route path="/schedule" element={<Schedule />} />
+              <Route path="/profile" element={<Profile />} />
+            </Routes>
+          </div>
+        </Router>
+      </SignedUpGamesProvider>
     </ThemeProvider>
   );
 }

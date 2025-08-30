@@ -1,12 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
+import { SignedUpGamesContext } from '../SignedUpGamesContext';
 // ...existing code...
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
 import Stack from '@mui/material/Stack';
 import EventIcon from '@mui/icons-material/Event';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import Button from '@mui/material/Button';
+import Radio from '@mui/material/Radio';
+import RadioGroup from '@mui/material/RadioGroup';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import FormLabel from '@mui/material/FormLabel';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
+import TextField from '@mui/material/TextField';
 import { initialActivities } from '../data/activities';
 import { games } from '../data/games';
+import { shiftTypes } from '../data/shifts';
 const gameCardColor = '#ffebee';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
@@ -14,6 +28,54 @@ import Box from '@mui/material/Box';
 import Pagination from '@mui/material/Pagination';
 
 function Volunteer() {
+  const { addSignedUpGame } = useContext(SignedUpGamesContext);
+  // Modal state
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedGame, setSelectedGame] = useState(null);
+  const [shiftForm, setShiftForm] = useState({
+    type: '',
+    role: '',
+    forSelf: 'yes',
+    name: '',
+    isAdult: 'yes',
+  });
+
+  // Open modal for game
+  const handleOpenModal = (game) => {
+    setSelectedGame(game);
+    setShiftForm({ type: '', role: '', forSelf: 'yes', name: '', isAdult: 'yes' });
+    setModalOpen(true);
+  };
+  const handleCloseModal = () => {
+    setModalOpen(false);
+    setSelectedGame(null);
+  };
+
+  // Handle shift form changes
+  const handleShiftFormChange = (e) => {
+    const { name, value } = e.target;
+    setShiftForm(f => ({ ...f, [name]: value }));
+  };
+
+  // Get selected type and roles
+  const selectedTypeObj = shiftTypes.find(t => t.type === shiftForm.type);
+  const selectedRoleObj = selectedTypeObj?.roles.find(r => r.name === shiftForm.role);
+
+  // Handle shift sign up submit
+  const handleShiftSubmit = (e) => {
+    e.preventDefault();
+    const newShift = {
+      date: selectedGame.date,
+      title: `${selectedGame.name} - ${shiftForm.type} - ${shiftForm.role}`,
+      type: 'Shift',
+      hours: 2,
+      description: `Role for ${shiftForm.forSelf === 'yes' ? 'yourself' : shiftForm.name}. ${selectedRoleObj?.description || ''}`
+    };
+    setActivities(prev => [newShift, ...prev]);
+    addSignedUpGame(newShift);
+    setModalOpen(false);
+    setSelectedGame(null);
+  };
   const [tab, setTab] = useState(0);
   // Pagination state for activity log
   const [page, setPage] = useState(1);
@@ -35,7 +97,23 @@ function Volunteer() {
 
   // Calculate total hours for status
   const totalHours = activities.reduce((sum, a) => sum + Number(a.hours), 0);
-  const gameShifts = activities.filter(a => a.type === 'Shift').length;
+  // Get today's date for comparison
+  const today = new Date();
+  // Helper to check if a date is in the current quarter
+  function isInCurrentQuarter(dateStr) {
+    const date = new Date(dateStr);
+    const year = today.getFullYear();
+    const quarter = Math.floor(today.getMonth() / 3);
+    return date.getFullYear() === year && Math.floor(date.getMonth() / 3) === quarter;
+  }
+  // Completed shifts: date in past and in current quarter
+  const completedGameShifts = activities.filter(a => {
+    return a.type === 'Shift' && a.title.includes('-') && isInCurrentQuarter(a.date) && new Date(a.date) < today;
+  }).length;
+  // Pending shifts: date in future and in current quarter
+  const pendingGameShifts = activities.filter(a => {
+    return a.type === 'Shift' && a.title.includes('-') && isInCurrentQuarter(a.date) && new Date(a.date) >= today;
+  }).length;
 
   const handleTabChange = (event, newValue) => {
     setTab(newValue);
@@ -86,12 +164,50 @@ function Volunteer() {
         </Tabs>
       </Box>
       {tab === 0 && (
-        <Box>
+        <Box sx={{ maxHeight: 500, overflowY: 'auto' }}>
           <h2>Activity</h2>
           <h3>Status</h3>
           <p><strong>Hours this month:</strong> {totalHours}</p>
-          <p><strong>Game shifts this quarter:</strong> {gameShifts}</p>
+          <p>
+            <strong>Game shifts this quarter:</strong> {completedGameShifts}
+            {pendingGameShifts > 0 && (
+              <span style={{ color: '#1976d2', marginLeft: 8 }}>
+                &nbsp;(+{pendingGameShifts} pending sign-up{pendingGameShifts > 1 ? 's' : ''})
+              </span>
+            )}
+          </p>
           <hr style={{ margin: '24px 0' }} />
+          <h3>Upcoming Shifts</h3>
+          <Stack spacing={2} sx={{ marginBottom: 3 }}>
+            {activities
+              .filter(a => a.type === 'Shift' && a.title.includes('-'))
+              .map((activity, idx) => {
+                // Parse type and role from title
+                const parts = activity.title.split(' - ');
+                const gameName = parts[0];
+                const shiftType = parts[1] || '';
+                const shiftRole = parts[2] || '';
+                // Extract name from description if present
+                let forName = '';
+                const match = activity.description.match(/Role for ([^\.]+)\./);
+                if (match && match[1] && match[1] !== 'yourself') {
+                  forName = match[1];
+                }
+                return (
+                  <Card key={idx} sx={{ background: gameCardColor, display: 'flex', alignItems: 'center', minWidth: 320 }}>
+                    <div style={{ padding: 16 }}><EventIcon sx={{ color: '#d32f2f' }} /></div>
+                    <CardContent>
+                      <Typography variant="h6">{gameName}</Typography>
+                      <Typography variant="body2">{activity.date}</Typography>
+                      <Typography variant="body2" sx={{ fontWeight: 500, color: '#1976d2', marginTop: 1 }}>{shiftType} — {shiftRole}</Typography>
+                      {forName && (
+                        <Typography variant="body2" sx={{ color: '#333', marginTop: 1 }}>For: {forName}</Typography>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })}
+          </Stack>
           <h3>Activity Log</h3>
           <ul style={{ paddingLeft: 0, listStyle: 'none' }}>
             {pagedActivities.map((activity, idx) => (
@@ -153,7 +269,7 @@ function Volunteer() {
           <p>View and sign up for available volunteer game shifts.</p>
           <Stack spacing={2} sx={{ marginTop: 2 }}>
             {games.map((game, idx) => (
-              <Card key={idx} sx={{ background: gameCardColor, display: 'flex', alignItems: 'center', minWidth: 320 }}>
+              <Card key={idx} sx={{ background: gameCardColor, display: 'flex', alignItems: 'center', minWidth: 320, cursor: 'pointer' }} onClick={() => handleOpenModal(game)}>
                 <div style={{ padding: 16 }}><EventIcon sx={{ color: '#d32f2f' }} /></div>
                 <CardContent>
                   <Typography variant="h6">{game.name}</Typography>
@@ -162,6 +278,61 @@ function Volunteer() {
               </Card>
             ))}
           </Stack>
+          <Dialog open={modalOpen} onClose={handleCloseModal} maxWidth="sm" fullWidth>
+            <DialogTitle>Sign Up for Game Shift</DialogTitle>
+            <DialogContent>
+              <form onSubmit={handleShiftSubmit}>
+                <FormLabel>Shift Type</FormLabel>
+                <Select name="type" value={shiftForm.type} onChange={handleShiftFormChange} fullWidth sx={{ mb: 2 }} required>
+                  <MenuItem value="">Select Type</MenuItem>
+                  {shiftTypes.map((t) => (
+                    <MenuItem key={t.type} value={t.type}>{t.type}</MenuItem>
+                  ))}
+                </Select>
+                {selectedTypeObj && (
+                  <Typography variant="body2" sx={{ mb: 2 }}>{selectedTypeObj.description}</Typography>
+                )}
+                {selectedTypeObj && (
+                  <>
+                    <FormLabel>Role</FormLabel>
+                    <RadioGroup name="role" value={shiftForm.role} onChange={handleShiftFormChange} sx={{ mb: 2 }} required>
+                      {selectedTypeObj.roles.map((r) => (
+                        <FormControlLabel key={r.name} value={r.name} control={<Radio required />} label={
+                          <Box>
+                            <Typography variant="body2" sx={{ fontWeight: 500 }}>{r.name}</Typography>
+                            <Typography variant="caption">{r.description}</Typography>
+                          </Box>
+                        } />
+                      ))}
+                    </RadioGroup>
+                  </>
+                )}
+                {shiftForm.role && (
+                  <>
+                    <FormLabel>Is this role for yourself?</FormLabel>
+                    <RadioGroup name="forSelf" value={shiftForm.forSelf} onChange={handleShiftFormChange} row sx={{ mb: 2 }}>
+                      <FormControlLabel value="yes" control={<Radio />} label="Yes" />
+                      <FormControlLabel value="no" control={<Radio />} label="No" />
+                    </RadioGroup>
+                    {shiftForm.forSelf === 'no' && (
+                      <>
+                        <TextField name="name" label="Name for role" value={shiftForm.name} onChange={handleShiftFormChange} fullWidth sx={{ mb: 2 }} required />
+                        <FormLabel>Is the skater 18 or older?</FormLabel>
+                        <RadioGroup name="isAdult" value={shiftForm.isAdult} onChange={handleShiftFormChange} row sx={{ mb: 2 }}>
+                          <FormControlLabel value="yes" control={<Radio />} label="Yes" />
+                          <FormControlLabel value="no" control={<Radio />} label="No" />
+                        </RadioGroup>
+                      </>
+                    )}
+                  </>
+                )}
+                <DialogActions>
+                  <Button onClick={handleCloseModal}>Cancel</Button>
+                  <Button type="submit" variant="contained" disabled={!shiftForm.type || !shiftForm.role || (shiftForm.forSelf === 'no' && !shiftForm.name)}>Sign Up</Button>
+                </DialogActions>
+              </form>
+            </DialogContent>
+          </Dialog>
         </Box>
       )}
       {tab === 3 && (

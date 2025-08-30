@@ -5,5 +5,19 @@ export const games = [
     date: '2025-09-10',
     time: '8:00 PM',
   },
-  // Add more games as needed
+  {
+    name: 'Season Opener',
+    date: '2025-09-15',
+    time: '7:00 PM',
+  },
+  {
+    name: 'Rivalry Match',
+    date: '2025-09-22',
+    time: '6:30 PM',
+  },
+  {
+    name: 'Finals Preview',
+    date: '2025-09-29',
+    time: '8:30 PM',
+  },
 ];
