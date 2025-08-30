@@ -4,8 +4,9 @@ import NavBar from './components/NavBar';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Home from './pages/Home';
 import Volunteer from './pages/Volunteer';
-import Schedule from './pages/Schedule';
+import DataManagement from './pages/Schedule';
 import Profile from './pages/Profile';
+import Support from './pages/Support';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { SignedUpGamesProvider } from './SignedUpGamesContext';
 
@@ -39,8 +40,10 @@ export default function App() {
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/volunteer" element={<Volunteer />} />
-              <Route path="/schedule" element={<Schedule />} />
+              <Route path="/data" element={<DataManagement />} />
+              <Route path="/schedule" element={<DataManagement />} />
               <Route path="/profile" element={<Profile />} />
+              <Route path="/support" element={<Support />} />
             </Routes>
           </div>
         </Router>

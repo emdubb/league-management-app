@@ -35,8 +35,9 @@ export default function NavBar() {
         >
           <MenuItem onClick={handleClose} component={Link} to="/">Home</MenuItem>
           <MenuItem onClick={handleClose} component={Link} to="/volunteer">Volunteer</MenuItem>
-          <MenuItem onClick={handleClose} component={Link} to="/schedule">Schedule</MenuItem>
+          <MenuItem onClick={handleClose} component={Link} to="/data">Data Management</MenuItem>
           <MenuItem onClick={handleClose} component={Link} to="/profile">Profile</MenuItem>
+          <MenuItem onClick={handleClose} component={Link} to="/support">Support</MenuItem>
         </Menu>
       </Toolbar>
     </AppBar>
